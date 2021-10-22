@@ -14,7 +14,7 @@
             "name": "Launch Chrome",
             "request": "launch",
             "type": "pwa-chrome",
-            "url": "http://localhost:80/pokedex/",
+            "url": "http://localhost:80/pokedex/php_views/pokemon.php",
             "webRoot": "${workspaceFolder}"
         }
     ]
