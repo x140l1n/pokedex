@@ -24,7 +24,7 @@
                         </p>
                     </div>
                     <div class="card-footer">
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
                             <button class="btn btn-outline-danger" title="Delete pokémon" type="button">
                                 <i class="fas fa-trash"></i>
                             </button>
