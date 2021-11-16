@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-primary">
     <div class="container-fluid">
         <a class="navbar-brand" href="/pokedex/index.php">
-            <img src="/pokedex/media/pokedex.png" alt="Pokédex logo" width="30" height="24" class="d-inline-block align-text-center">
+            <img src="/pokedex/media/img/pokedex.png" alt="Pokédex logo" width="30" height="24" class="d-inline-block align-text-center">
             Pokédex
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">

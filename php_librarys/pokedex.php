@@ -1,13 +1,13 @@
 <?php
 
 /*
-Number:         Each pokémon has a number that identifies it and is unique to each pokémon.
-Name:           The name of the pokémon.
-Region:         Name of the region from which the pokémon originates. A pokémon is only from one region.
-Type:           Types of pokémon. A pokémon must have at least one type, but it can have more.
-Height:         Height of the pokémon. We will save it in centimeters without decimals.
-Weight:         Weight of the pokémon. We will store it in kilograms and it can have decimals.
-Evolution:      We need to know if the pokémon is an unevolved pokémon, if it is a first evolution or if it is a later evolution.
+Number:         Each pokemon has a number that identifies it and is unique to each pokemon.
+Name:           The name of the pokemon.
+Region:         Name of the region from which the pokemon originates. A pokemon is only from one region.
+Type:           Types of pokemon. A pokemon must have at least one type, but it can have more.
+Height:         Height of the pokemon. We will save it in centimeters without decimals.
+Weight:         Weight of the pokemon. We will store it in kilograms and it can have decimals.
+Evolution:      We need to know if the pokemon is an unevolved pokemon, if it is a first evolution or if it is a later evolution.
 Image url:      Route where the image of the pokemon is.
 */
 
@@ -25,58 +25,52 @@ function createPokemon($number, $name, $region, $type, $height, $weight, $evolut
     ];
 }
 
-function showPokemon($pokemon)
-{
-    if (isset($pokemon)) {
-        echo nl2br("-------------------------------------\n
-        Number: ${pokemon['number']}\n
-        Name: ${pokemon['name']}\n
-        Region: ${pokemon['region']}\n
-        Type: " . implode(", ", $pokemon["type"]) . "\n
-        Height: ${pokemon['height']}\n
-        Weight: ${pokemon['weight']}\n
-        Evolution: ${pokemon['evolution']}\n
-        Image url: ${pokemon['image_url']}\n
-        -------------------------------------\n");
-    } else {
-        echo nl2br("Error show, pokemon not defined.\n");
-    }
-}
-
 function addPokemon(&$pokedex, $pokemon)
 {
+    $result = [];
+
     $index = findPokemonByNum($pokedex, $pokemon["number"]);
 
     if ($index === -1) {
         array_push($pokedex, $pokemon);
-        echo nl2br("Pokemon added.\n");
+        $result = ["status_code" => 200, "message" => "Pokemon added."];
     } else {
-        echo nl2br("Error add, this pokemon is already exists.\n");
+        $result = ["status_code" => 409, "message" => "Error add, this pokemon is already exists."];
     }
+
+    return $result;
 }
 
 function deletePokemon(&$pokedex, $number)
 {
+    $result = [];
+
     $index = findPokemonByNum($pokedex, $number);
 
     if ($index === -1) {
-        echo nl2br("Error delete, this pokemon not exists.\n");
+        $result = ["status_code" => 409, "message" => "Error delete, this pokemon not exists."];
     } else {
         array_splice($pokedex, $index, 1);
-        echo nl2br("Pokemon deleted.\n");
+        $result = ["status_code" => 200, "message" => "Pokemon deleted."];
     }
+
+    return $result;
 }
 
 function updatePokemon(&$pokedex, $pokemon)
 {
+    $result = [];
+
     $index = findPokemonByNum($pokedex, $pokemon["number"]);
 
     if ($index === -1) {
-        echo nl2br("Error update, this pokemon not exists.\n");
+        $result = ["status_code" => 409, "message" => "Error update, this pokemon not exists."];
     } else {
         $pokedex = array_replace($pokedex, array($index => $pokemon));
-        echo nl2br("Pokemon updated.\n");
+        $result = ["status_code" => 200, "message" => "Pokemon updated."];
     }
+
+    return $result;
 }
 
 function findPokemonByNum($pokedex, $number)
@@ -102,4 +96,24 @@ function showPokedex($pokedex)
                     Image url: ${pokemon['image_url']}\n
                     -------------------------------------\n");
     }
+}
+
+function showPokemon($pokemon)
+{
+    $result = [];
+
+    if (isset($pokemon)) {
+        $result = ["status_code" => 200, "message" => nl2br("Number: ${pokemon['number']}\n
+                                                            Name: ${pokemon['name']}\n
+                                                            Region: ${pokemon['region']}\n
+                                                            Type: " . implode(", ", $pokemon["type"]) . "\n
+                                                            Height: ${pokemon['height']}\n
+                                                            Weight: ${pokemon['weight']}\n
+                                                            Evolution: ${pokemon['evolution']}\n
+                                                            Image url: ${pokemon['image_url']}\n")];
+    } else {
+        $result = ["status_code" => 409, "message" => "Error show, pokemon not defined."];
+    }
+
+    return $result;
 }

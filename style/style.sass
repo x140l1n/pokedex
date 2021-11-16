@@ -6,7 +6,7 @@ $danger: #ff4136
 @import "../UI/bootstrap-5.0.2/scss/bootstrap.scss"
 @import "../UI/fontawesome-free-5.15.4-web/css/all.min.css"
 
-$background_path: "../media/pokedex.png"
+$background_path: "../media/img/pokedex.png"
 
 body.background
     background: url($background_path) no-repeat center center fixed
@@ -20,3 +20,20 @@ body.background
     bottom: 10px
     right: 10px
     z-index: 100
+
+.alert-floating
+    position: fixed
+    top: 10px 
+    left: 50%
+    transform: translateX(-50%)
+    z-index: 9999
+
+.fade 
+    opacity: 0
+    -webkit-transition: opacity 0.15s linear
+    -moz-transition: opacity 0.15s linear
+    -o-transition: opacity 0.15s linear
+    transition: opacity 0.15s linear
+
+.fade.in 
+    opacity: 1

@@ -43,12 +43,12 @@ if (isset($_SESSION["pokemon"])) {
                         <img src="/pokedex/media/img/pokeball.png" width="50" height="50" />
                         <span class="fs-5 text-light ms-2">Pokemon</span>
                     </div>
-                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data" name="form-add">
+                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data" name="form-update">
                         <div class="card-body">
                             <div class="row mb-3">
                                 <label for="input-number" class="col-sm-3 col-form-label">Number * </label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="number" id="input-number" maxlength="3" placeholder="000" value="<?php echo (isset($pokemon) ? $pokemon["number"] : "") ?>" required>
+                                    <input type="text" class="form-control" name="number" id="input-number" maxlength="3" placeholder="000" value="<?php echo (isset($pokemon) ? $pokemon["number"] : "") ?>" required readonly>
                                 </div>
                             </div>
                             <div class="row mb-3">
@@ -157,7 +157,7 @@ if (isset($_SESSION["pokemon"])) {
                             </div>
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-2">
                                 <a href="pokemon_list.php" class="btn btn-secondary float-end">Cancel</a>
-                                <button type="submit" class="btn btn-primary float-end" name="method" value="add">Submit</button>
+                                <button type="submit" class="btn btn-primary float-end" name="method" value="update">Submit</button>
                             </div>
                         </div>
                     </form>
