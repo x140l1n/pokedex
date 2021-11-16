@@ -10,6 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (isset($_SESSION["pokemon"])) {
     $pokemon = $_SESSION["pokemon"];
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

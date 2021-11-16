@@ -44,7 +44,7 @@ function add()
     $number = isset($_POST["number"]) ? $_POST["number"] : "";
     $name = isset($_POST["name"]) ? $_POST["name"] : "";
     $region = isset($_POST["region"]) ? $_POST["region"] : "";
-    $type = isset($_POST["type"]) ? $_POST["type"] : "";
+    $type = isset($_POST["type"]) ? $_POST["type"] : [];
     $height = isset($_POST["height"]) ? $_POST["height"] : "";
     $weight = isset($_POST["weight"]) ? $_POST["weight"] : "";
     $evolution = isset($_POST["evolution"]) ? $_POST["evolution"] : "";
@@ -64,14 +64,14 @@ function add()
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
-    if (!(empty($number) && 
-        empty($name) &&
-        empty($region) &&
-        empty($type) &&
-        empty($pokemon) &&
-        empty($height) &&
-        empty($weight) &&
-        empty($evolution) && 
+    if (!(empty($number) || 
+        empty($name) ||
+        empty($region) ||
+        empty($type) ||
+        empty($pokemon) ||
+        empty($height) ||
+        empty($weight) ||
+        empty($evolution) ||
         empty($image))) {
         //Check if the number of length is 3 and only digits.
         if (strlen($number) === 3 && numbers_only($number)) {
@@ -165,7 +165,7 @@ function update()
     $number = isset($_POST["number"]) ? $_POST["number"]: "";
     $name = isset($_POST["name"]) ? $_POST["name"]: "";
     $region = isset($_POST["region"]) ? $_POST["region"]: "";
-    $type = isset($_POST["type"]) ? $_POST["type"] : "";
+    $type = isset($_POST["type"]) ? $_POST["type"] : [];
     $height = isset($_POST["height"]) ? $_POST["height"] : "";
     $weight = isset($_POST["weight"]) ? $_POST["weight"] : "";
     $evolution = isset($_POST["evolution"]) ? $_POST["evolution"] : "";
@@ -185,14 +185,14 @@ function update()
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
-    if (!(empty($number) && 
-        empty($name) &&
-        empty($region) &&
-        empty($type) &&
-        empty($pokemon) &&
-        empty($height) &&
-        empty($weight) &&
-        empty($evolution) && 
+    if (!(empty($number) || 
+        empty($name) ||
+        empty($region) ||
+        empty($type) ||
+        empty($pokemon) ||
+        empty($height) ||
+        empty($weight) ||
+        empty($evolution) ||
         empty($image))) {
         //Check if the number of length is 3 and only digits.
         if (strlen($number) === 3 && numbers_only($number)) {
