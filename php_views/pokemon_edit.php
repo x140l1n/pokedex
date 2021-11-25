@@ -18,13 +18,13 @@ if (isset($_SESSION["pokemon"])) {
 <head>
     <?php
     //Import the links styles. 
-    include("../php_partials/head.php")
+    include("../php_partials/head.php");
     ?>
     <title>Pokemon</title>
 </head>
 
 <body>
-    <?php include("../php_partials/navbar.php") ?>
+    <?php include("../php_partials/navbar.php"); ?>
     <div class="container-fluid p-4">
         <?php
         if (isset($_SESSION["response"])) {

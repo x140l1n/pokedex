@@ -14,14 +14,14 @@ Image url:      Route where the image of the pokemon is.
 function createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $image_url)
 {
     return  [
-        "number" => $number,
-        "name" => $name,
+        "numero" => $number,
+        "nombre" => $name,
         "region" => $region,
-        "type" => $type,
-        "height" => $height,
-        "weight" => $weight,
-        "evolution" => $evolution,
-        "image_url" => $image_url
+        "tipos" => $type,
+        "altura" => $height,
+        "peso" => $weight,
+        "evolucion" => $evolution,
+        "imagen" => $image_url
     ];
 }
 

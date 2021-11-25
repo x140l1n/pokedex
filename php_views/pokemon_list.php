@@ -1,20 +1,18 @@
 <?php
+
+//Import all libraries.
+require_once("../php_librarys/database.php");
+
 //If there is not session, start session.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-//Delete pokemon variable if is set in session.
-if (isset($_SESSION["pokemon"])) {
-    unset($_SESSION["pokemon"]);
-}
-
 $pokedex = [];
 
-//Check if we have pokedex.
-if (isset($_SESSION["pokedex"])) {
-    $pokedex = $_SESSION["pokedex"];
-}
+$database = new Database();
+
+$pokedex = $database->SelectPokemons();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,13 +20,13 @@ if (isset($_SESSION["pokedex"])) {
 <head>
     <?php
     //Import the links styles. 
-    include("../php_partials/head.php")
+    include("../php_partials/head.php");
     ?>
     <title>Pokemon list</title>
 </head>
 
 <body>
-    <?php include("../php_partials/navbar.php") ?>
+    <?php include("../php_partials/navbar.php"); ?>
     <div class="container-fluid p-4">
         <?php
         if (isset($_SESSION["response"])) {
@@ -47,15 +45,15 @@ if (isset($_SESSION["pokedex"])) {
 
                 $type_str = "";
 
-                foreach ($pokemon["type"] as $type) {
-                    $type_str .= '<span class="badge bg-warning text-dark me-2">' . strtoupper($type) . '</span>';
+                foreach ($pokemon["tipos"] as $type) {
+                    $type_str .= '<span class="badge bg-warning text-dark me-2">' . mb_strtoupper($type["nombre"]) . '</span>';
                 }
 
                 echo '<div class="col d-flex align-items-stretch">
                             <div class="card border border-secondary">
-                                <img src="' . $pokemon["image_url"] . '" class="card-img-top" alt="' . $pokemon["name"] . '">
+                                <img src="' . $pokemon["imagen"] . '" class="card-img-top" alt="' . $pokemon["nombre"] . '">
                                 <div class="card-body">
-                                    <h5 class="card-title">' . $pokemon["number"] . ' - ' . $pokemon["name"] . '</h5>
+                                    <h5 class="card-title">' . $pokemon["numero"] . ' - ' . $pokemon["nombre"] . '</h5>
                                     <p class="card-text">
                                         ' . $type_str . '
                                     </p>
@@ -68,7 +66,7 @@ if (isset($_SESSION["pokedex"])) {
                                         <button class="btn btn-outline-primary" type="submit" title="Edit pokemon" name="method" value="redirect_update_page">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <input type="hidden" name="number" value="' . $pokemon["number"] . '"/>
+                                        <input type="hidden" name="number" value="' . $pokemon["numero"] . '"/>
                                     </form>
                                 </div>
                             </div>

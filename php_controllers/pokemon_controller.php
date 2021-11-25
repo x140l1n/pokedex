@@ -1,8 +1,9 @@
 <?php
 
 //Import all libraries.
-require("../php_librarys/pokedex.php");
 require("../php_librarys/functions.php");
+require("../php_librarys/pokedex.php");
+require("../php_librarys/database.php");
 
 //If there is not session, start session.
 if (session_status() === PHP_SESSION_NONE) {
@@ -14,7 +15,7 @@ if (isset($_POST["method"]) && !empty($_POST["method"])) {
     //Get the method name.
     $method = $_POST["method"];
 
-    //Check if the method exists.
+    //Check if the function exists.
     if (function_exists($method)) {
         //Call the method.
         $method();
@@ -32,13 +33,7 @@ if (isset($_POST["method"]) && !empty($_POST["method"])) {
 //Functions controller.
 function add()
 {
-    $pokedex = [];
     $result = [];
-
-    //Check if we have pokedex.
-    if (isset($_SESSION["pokedex"])) {
-        $pokedex = $_SESSION["pokedex"];
-    }
 
     //Get all values from POST, if is not set, get empty value.
     $number = isset($_POST["number"]) ? $_POST["number"] : "";
@@ -64,7 +59,7 @@ function add()
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
-    if (!(empty($number) || 
+    if (!(empty($number) ||
         empty($name) ||
         empty($region) ||
         empty($type) ||
@@ -75,15 +70,20 @@ function add()
         empty($image))) {
         //Check if the number of length is 3 and only digits.
         if (strlen($number) === 3 && numbers_only($number)) {
-            //Add pokemon to pokedex.
-            $result = addPokemon($pokedex, $pokemon);
+            try {
+                //Add pokemon to database.
+                $database = new Database();
+                $database->InsertPokemon($pokemon);
 
-            //If the pokemon is added correctly.
-            if ($result["status_code"] === 200) {
-                //Move the image path from temporal path to /media/img/.
-                if (!move_uploaded_file($img_path_tmp, $img_path_relative)) {
-                    $result = ["status_code" => 400, "message" => "Error to upload the file."];
+                //If the pokemon is added correctly.
+                if ($result["status_code"] === 200) {
+                    //Move the image path from temporal path to /media/img/.
+                    if (!move_uploaded_file($img_path_tmp, $img_path_relative)) {
+                        $result = ["status_code" => 400, "message" => "Error to upload the file."];
+                    }
                 }
+            } catch (PDOException $e) {
+                $result = ["status_code" => 400, "message" => "The number of pokemon is not valid."];
             }
         } else {
             $result = ["status_code" => 400, "message" => "The number of pokemon is not valid."];
@@ -91,10 +91,6 @@ function add()
     } else {
         $result = ["status_code" => 400, "message" => "All fields is required."];
     }
-
-    //Add pokedex to session with new values.
-    $_SESSION["pokedex"] = $pokedex;
-
     //Add message to session.
     $_SESSION["response"] = $result;
 
@@ -102,7 +98,6 @@ function add()
         //Redirect to pokemon_list.php
         header("Location: ../php_views/pokemon_list.php");
     } else {
-        //Add pokemon data to session.
         $_SESSION["pokemon"] = $pokemon;
 
         //Redirect to pokemon.php        
@@ -110,7 +105,8 @@ function add()
     }
 }
 
-function redirect_update_page() {
+function redirect_update_page()
+{
     $pokedex = [];
     $pokemon = [];
     $result = [];
@@ -122,13 +118,13 @@ function redirect_update_page() {
 
     //Get all values from POST, if is not set, get empty value.
     $number = isset($_POST["number"]) ? $_POST["number"] : "";
-    
+
     if (!empty($number)) {
         $index = findPokemonByNum($pokedex, $number);
 
         if ($index !== -1) {
             $pokemon = $pokedex[$index];
-            
+
             $result = ["status_code" => 200];
         } else {
             $result = ["status_code" => 400, "message" => "This pokemon is not exists."];
@@ -162,9 +158,9 @@ function update()
     }
 
     //Get all values from POST, if is not set, get empty value.
-    $number = isset($_POST["number"]) ? $_POST["number"]: "";
-    $name = isset($_POST["name"]) ? $_POST["name"]: "";
-    $region = isset($_POST["region"]) ? $_POST["region"]: "";
+    $number = isset($_POST["number"]) ? $_POST["number"] : "";
+    $name = isset($_POST["name"]) ? $_POST["name"] : "";
+    $region = isset($_POST["region"]) ? $_POST["region"] : "";
     $type = isset($_POST["type"]) ? $_POST["type"] : [];
     $height = isset($_POST["height"]) ? $_POST["height"] : "";
     $weight = isset($_POST["weight"]) ? $_POST["weight"] : "";
@@ -185,7 +181,7 @@ function update()
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
-    if (!(empty($number) || 
+    if (!(empty($number) ||
         empty($name) ||
         empty($region) ||
         empty($type) ||
