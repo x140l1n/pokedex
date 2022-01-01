@@ -1,2 +1,5 @@
 #Except this file
 !.gitignore
+
+.vscode
+.sass-cache
