@@ -8365,7 +8365,7 @@ textarea.form-control-lg {
   .d-print-none {
     display: none !important; } }
 body.background {
-  background: url("../media/img/pokedex.png") no-repeat center center fixed;
+  background: url("../webApp/pokedex.png") no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;

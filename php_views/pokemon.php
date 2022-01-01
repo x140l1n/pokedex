@@ -8,6 +8,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+if (isset($_SESSION["pokemon"])) {
+    $pokemon = $_SESSION["pokemon"];
+}
+
 $database = new Database();
 
 //Get all regions and types.
@@ -36,18 +40,16 @@ $types = $database->SelectTypes();
                         " . $_SESSION["response"]["message"] . "
                     </div>";
             }
-
-            unset($_SESSION["response"]);
         }
         ?>
         <div class="row justify-content-center">
             <div class="col-md-12 col-lg-5">
                 <div class="card">
                     <div class="card-header bg-secondary d-flex align-items-center">
-                        <img src="/pokedex/media/img/pokeball.png" width="50" height="50" />
+                        <img src="/pokedex/webApp/pokeball.png" width="50" height="50" />
                         <span class="fs-5 text-light ms-2">Pokemon</span>
                     </div>
-                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data" name="form-add">
+                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data">
                         <div class="card-body">
                             <div class="row mb-3">
                                 <label for="input-number" class="col-sm-3 col-form-label">Number * </label>
@@ -65,24 +67,30 @@ $types = $database->SelectTypes();
                                 <label for="select-region" class="col-sm-3 col-form-label">Region * </label>
                                 <div class="col-sm-9">
                                     <select class="form-select" name="region" id="select-region" required>
-                                       <?php 
-                                            foreach($regions as $region) {
-                                                echo "<option value='" . $region["id"] . "' " . (isset($pokemon["id_region"]) ? ($pokemon["id_region"] === $region["id"] ? "selected" : "") : "") . ">" . $region["nombre"] . "</option>";
-                                            }
-                                       ?>
+                                        <?php
+                                        foreach ($regions as $region) {
+                                            echo "<option value='" . $region["id"] . "' " . (isset($pokemon["region"]) ? ($pokemon["region"] === $region["id"] ? "selected" : "") : "") . ">" . $region["nombre"] . "</option>";
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label class="col-sm-3 col-form-label">Type * </label>
                                 <div class="col-sm-9">
-                                    <?php 
-                                        foreach($types as $type) {
-                                            echo    "<div class='form-check form-check-inline'>
-                                                        <input class='form-check-input' type='checkbox' name='type[]' id='type-" . $type["id"] . "' value='" . $type["id"] . "' >
+                                    <?php
+                                    $ids_types_pokemon = [];
+                                    
+                                    if (isset($pokemon["tipos"])) {
+                                        $ids_types_pokemon = array_values($pokemon["tipos"]);
+                                    }
+
+                                    foreach ($types as $type) {
+                                        echo    "<div class='form-check form-check-inline'>
+                                                        <input class='form-check-input' type='checkbox' name='type[]' id='type-" . $type["id"] . "' value='" . $type["id"] . "' " . (in_array($type["id"], $ids_types_pokemon) ? "checked" : "") . ">
                                                         <label class='form-check-label' for='type-" . $type["id"] . "'>" . $type["nombre"] . "</label>
                                                     </div>";
-                                        }
+                                    }
                                     ?>
                                 </div>
                             </div>
@@ -129,7 +137,7 @@ $types = $database->SelectTypes();
                             </div>
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-2">
                                 <a href="pokemon_list.php" class="btn btn-secondary float-end">Cancel</a>
-                                <button type="submit" class="btn btn-primary float-end" name="method" value="add">Submit</button>
+                                <button type="submit" class="btn btn-primary float-end" name="method" value="insert">Submit</button>
                             </div>
                         </div>
                     </form>

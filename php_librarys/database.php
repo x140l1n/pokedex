@@ -22,7 +22,6 @@ class Database
             try {
                 $this->conn = new PDO("mysql:host=" . HOST . ";dbname=" . DB, USERNAME, PASSWORD);
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); //Allow to throws exception when error ocurred from database.
-                $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false); //Avoid the integers values convert to string from database when prepares queries.
                 $this->conn->exec("SET NAMES UTF8;"); //Allow accents in the database.
             } catch (PDOException $e) {
                 throw $e;
@@ -31,11 +30,11 @@ class Database
     }
 
     /**
-     * Get all pokemons or one pokemon from database ordered by number of pokemon.
+     * Get all pokemons data or one pokemon data from database ordered by number of pokemon.
      * 
      * @param  int $id (optional) The id of pokemon.
      * @throws PDOException Throws exception when error ocurred with database.
-     * @return array Return array associative of all pokemons or one pokemon.
+     * @return array Return array associative of all pokemons data or one pokemon data.
      */
     public function SelectPokemons($id = -1)
     {
@@ -100,7 +99,6 @@ class Database
 
         return $types;
     }
-
 
     /**
      * Get all types or one type from database ordered by name of type.
@@ -175,7 +173,7 @@ class Database
     }
 
     /**
-     * Insert new pokemon with types to database. If an error ocurred, rollback all changes.
+     * Insert new pokemon with types to database. If an error ocurred rollback all changes.
      * 
      * @param  array $pokemon The pokemon data.
      * @throws PDOException Throws exception when error ocurred with database.
@@ -200,36 +198,143 @@ class Database
                 $statement->bindParam(":peso", $pokemon["peso"]);
                 $statement->bindParam(":evolucion", $pokemon["evolucion"]);
                 $statement->bindParam(":imagen", $pokemon["imagen"]);
-                $statement->bindParam(":regiones_id", $pokemon["regiones_id"]);
+                $statement->bindParam(":regiones_id", $pokemon["region"]);
 
                 $statement->execute();
 
-                $last_id = $this->conn->lastInsertId();
-                
-                //Save the types.
-                foreach ($pokemon["tipos"] as $type) {
-                    $statement = $this->conn->prepare("INSERT INTO tipos_has_pokemons VALUES (:tipos_id, :pokemons_id)");
+                $new_id = $this->conn->lastInsertId();
 
-                    $statement->bindParam(":tipos_id", $type["id"]);
-                    $statement->bindParam(":pokemons_id", $last_id);
+                if ($new_id !== false) {
+                    //Save the types.
+                    foreach ($pokemon["tipos"] as $type) {
+                        $statement = $this->conn->prepare("INSERT INTO tipos_has_pokemons VALUES (:tipos_id, :pokemons_id)");
 
-                    $statement->execute();
-                }                
+                        $statement->bindParam(":tipos_id", $type);
+                        $statement->bindParam(":pokemons_id", $new_id);
 
-                //Commit all changes.
-                $this->conn->commit();
+                        $statement->execute();
+                    }
+                    
+                    //Commit all changes if the transaction is currently active.
+                    if ($this->conn->inTransaction()) $this->conn->commit();
+
+                    $last_id = $new_id;
+                }
             } catch (PDOException $e) {
-                throw $e;
+                //When an error ocurred and the transaction is currently active rollback all changes.
+                if ($this->conn->inTransaction()) $this->conn->rollBack();
 
-                //When an error ocurred, rollback all changes.
-                $this->conn->rollBack();
+                //Throw the PDOException.
+                throw $e;
             }
         }
 
         return $last_id;
     }
 
-        
+    /**
+     * Delete a pokemon from the database.
+     * 
+     * @param  string $id The id of pokemon to delete.
+     * @throws PDOException Throws exception when error ocurred with database.
+     * @return int Return the id of pokemon deleted.
+     */
+    public function DeletePokemon($id)
+    {
+        $id_deleted = -1;
+
+        if ($this->conn) {
+            try {
+                //Save the pokemon.
+                $statement = $this->conn->prepare("DELETE FROM pokemons WHERE id = :id");
+
+                $statement->bindParam(":id", $id);
+
+                $statement->execute();
+
+                if ($statement->rowCount() === 1) {
+                    $id_deleted = $id;
+                }
+            } catch (PDOException $e) {
+                //Throw the PDOException.
+                throw $e;
+            }
+        }
+
+        return $id_deleted;
+    }
+
+    /**
+     * Update a pokemon from database. If an error ocurred rollback all changes.
+     * 
+     * @param  array $pokemon The pokemon data updated.
+     * @param  string $id The id of pokemon to update.
+     * @throws PDOException Throws exception when error ocurred with database.
+     * @return int Return the id of pokemon updated.
+     */
+    public function UpdatePokemon($pokemon, $id)
+    {
+        $id_updated = -1;
+
+        if ($this->conn) {
+            try {
+                //Start the transaction.
+                $this->conn->beginTransaction();
+
+                //Save the pokemon.
+                $statement = $this->conn->prepare(" UPDATE pokemons SET numero = :numero, 
+                                                                        nombre = :nombre, 
+                                                                        altura = :altura, 
+                                                                        peso = :peso, 
+                                                                        evolucion = :evolucion, 
+                                                                        imagen = :imagen, 
+                                                                        regiones_id = :regiones_id 
+                                                    WHERE id = :id");
+
+                $statement->bindParam(":numero", $pokemon["numero"]);
+                $statement->bindParam(":nombre", $pokemon["nombre"]);
+                $statement->bindParam(":altura", $pokemon["altura"]);
+                $statement->bindParam(":peso", $pokemon["peso"]);
+                $statement->bindParam(":evolucion", $pokemon["evolucion"]);
+                $statement->bindParam(":imagen", $pokemon["imagen"]);
+                $statement->bindParam(":regiones_id", $pokemon["region"]);
+                $statement->bindParam(":id", $id);
+
+                $statement->execute();
+
+                //Delete all previous types of pokemon.
+                $statement = $this->conn->prepare("DELETE FROM tipos_has_pokemons WHERE pokemons_id = :id");
+
+                $statement->bindParam(":id", $id);
+
+                $statement->execute();
+
+                //Save the new types.
+                foreach ($pokemon["tipos"] as $type) {
+                    $statement = $this->conn->prepare("INSERT INTO tipos_has_pokemons VALUES (:tipos_id, :pokemons_id)");
+
+                    $statement->bindParam(":tipos_id", $type);
+                    $statement->bindParam(":pokemons_id", $id);
+
+                    $statement->execute();
+                }
+
+                //Commit all changes if the transaction is currently active.
+                if ($this->conn->inTransaction()) $this->conn->commit();
+
+                $id_updated = $id;
+            } catch (PDOException $e) {
+                //When an error ocurred and the transaction is currently active rollback all changes.
+                if ($this->conn->inTransaction()) $this->conn->rollBack();
+
+                //Throw the PDOException.
+                throw $e;
+            }
+        }
+
+        return $id_updated;
+    }
+
     /**
      * Close the connection if is different than null.
      *

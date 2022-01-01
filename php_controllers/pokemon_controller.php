@@ -31,7 +31,7 @@ if (isset($_POST["method"]) && !empty($_POST["method"])) {
 }
 
 //Functions controller.
-function add()
+function insert()
 {
     $result = [];
 
@@ -48,14 +48,14 @@ function add()
     $img_path_absolute = "";
 
     //Check if image is submit from client.
-    if (!(empty($image) && empty($number))) {
+    if (!empty($number) && !empty($image) && $image["error"] !== 4) {
         $img_path_tmp = $image["tmp_name"];
         $extension = pathinfo($image["name"], PATHINFO_EXTENSION);
-        $img_path_relative = "../media/img/" . $number . "." . $extension;
-        $img_path_absolute = "/pokedex/media/img/" . $number . "." . $extension;
+        $img_path_relative = "../users/img/" . $number . "." . $extension;
+        $img_path_absolute = "/pokedex/users/img/" . $number . "." . $extension;
     }
 
-    //Create array associative of pokemon with values.
+    //Create array associative of pokemon with data.
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
@@ -73,17 +73,21 @@ function add()
             try {
                 //Add pokemon to database.
                 $database = new Database();
-                $database->InsertPokemon($pokemon);
+                $id_pokemon_added = $database->InsertPokemon($pokemon);
 
                 //If the pokemon is added correctly.
-                if ($result["status_code"] === 200) {
-                    //Move the image path from temporal path to /media/img/.
+                if ($id_pokemon_added !== -1) {
+                    //Move the image path from temporal path to /users/img/.
                     if (!move_uploaded_file($img_path_tmp, $img_path_relative)) {
                         $result = ["status_code" => 400, "message" => "Error to upload the file."];
+                    } else {
+                        $result = ["status_code" => 200, "message" => "Pokemon added."];
                     }
+                } else {
+                    $result = ["status_code" => 500, "message" => "Pokemon has not been added."];
                 }
             } catch (PDOException $e) {
-                $result = ["status_code" => 400, "message" => "The number of pokemon is not valid."];
+                $result = ["status_code" => 500, "message" => getErrorMessage($e)];
             }
         } else {
             $result = ["status_code" => 400, "message" => "The number of pokemon is not valid."];
@@ -91,10 +95,12 @@ function add()
     } else {
         $result = ["status_code" => 400, "message" => "All fields is required."];
     }
-    //Add message to session.
+
+    //Add response message to session.
     $_SESSION["response"] = $result;
 
-    if ($result["status_code"] === 200) {
+    //If the pokemon is added without any errors.
+    if (isset($id_pokemon_added) && $id_pokemon_added !== -1) {
         //Redirect to pokemon_list.php
         header("Location: ../php_views/pokemon_list.php");
     } else {
@@ -105,59 +111,12 @@ function add()
     }
 }
 
-function redirect_update_page()
-{
-    $pokedex = [];
-    $pokemon = [];
-    $result = [];
-
-    //Check if we have pokedex.
-    if (isset($_SESSION["pokedex"])) {
-        $pokedex = $_SESSION["pokedex"];
-    }
-
-    //Get all values from POST, if is not set, get empty value.
-    $number = isset($_POST["number"]) ? $_POST["number"] : "";
-
-    if (!empty($number)) {
-        $index = findPokemonByNum($pokedex, $number);
-
-        if ($index !== -1) {
-            $pokemon = $pokedex[$index];
-
-            $result = ["status_code" => 200];
-        } else {
-            $result = ["status_code" => 400, "message" => "This pokemon is not exists."];
-        }
-    } else {
-        $result = ["status_code" => 400, "message" => "The number of pokemon is missing."];
-    }
-
-    //Add message to session.
-    $_SESSION["response"] = $result;
-
-    if ($result["status_code"] === 200) {
-        $_SESSION["pokemon"] = $pokemon;
-
-        //Redirect to pokemon_edit.php
-        header("Location: ../php_views/pokemon_edit.php");
-    } else {
-        //Redirect to pokemon_list.php        
-        header("Location: ../php_views/pokemon_list.php");
-    }
-}
-
 function update()
 {
-    $pokedex = [];
     $result = [];
 
-    //Check if we have pokedex.
-    if (isset($_SESSION["pokedex"])) {
-        $pokedex = $_SESSION["pokedex"];
-    }
-
     //Get all values from POST, if is not set, get empty value.
+    $id = isset($_POST["id"]) ? $_POST["id"] : "";
     $number = isset($_POST["number"]) ? $_POST["number"] : "";
     $name = isset($_POST["name"]) ? $_POST["name"] : "";
     $region = isset($_POST["region"]) ? $_POST["region"] : "";
@@ -170,45 +129,74 @@ function update()
     $img_path_absolute = "";
 
     //Check if image is submit from client.
-    if (!(empty($image) && empty($number))) {
+    if (!empty($number) && !empty($image) && $image["error"] !== 4) {
         $img_path_tmp = $image["tmp_name"];
         $extension = pathinfo($image["name"], PATHINFO_EXTENSION);
-        $img_path_relative = "../media/img/" . $number . "." . $extension;
-        $img_path_absolute = "/pokedex/media/img/" . $number . "." . $extension;
+        $img_path_relative = "../users/img/" . $number . "." . $extension;
+        $img_path_absolute = "/pokedex/users/img/" . $number . "." . $extension;
     }
 
     //Create array associative of pokemon with values.
     $pokemon = createPokemon($number, $name, $region, $type, $height, $weight, $evolution, $img_path_absolute);
 
     //Check if all data is not empty.
-    if (!(empty($number) ||
+    if (!(empty($id) ||
+        empty($number) ||
         empty($name) ||
         empty($region) ||
         empty($type) ||
         empty($pokemon) ||
         empty($height) ||
         empty($weight) ||
-        empty($evolution) ||
-        empty($image))) {
+        empty($evolution))) {
         //Check if the number of length is 3 and only digits.
         if (strlen($number) === 3 && checkNumbersOnly($number)) {
-            //Get previous image path.
-            $img_path_relative_previous = $pokemon["image_url"];
+            try {
+                //Get previous data of pokemon.
+                $database = new Database();
+                $pokemons = $database->SelectPokemons($id);
 
-            //Delete previous image if exists.
-            if (!file_exists($img_path_relative_previous) || unlink($img_path_relative_previous)) {
-                //Add pokemon to pokedex.
-                $result = updatePokemon($pokedex, $pokemon);
+                if (count($pokemons) > 0) {
+                    //Get the image path previous.
+                    $img_path_absolute_previous = $pokemons[0]["imagen"];
+                    $extension = pathinfo($img_path_absolute_previous, PATHINFO_EXTENSION);
+                    $img_path_relative_previous = "../users/img/" . $number . "." . $extension;
 
-                //If the pokemon is added correctly.
-                if ($result["status_code"] === 200) {
-                    //Move the image path from temporal path to /media/img/.
-                    if (!move_uploaded_file($img_path_tmp, $img_path_relative)) {
-                        $result = ["status_code" => 400, "message" => "Error to upload the file."];
+                    //If the pokemon image is empty, set the previous image path.
+                    if (empty($img_path_absolute)) {
+                        $pokemon["imagen"] = $img_path_absolute_previous;
+
+                        //Update the pokemon data.
+                        $id_pokemon_updated = $database->UpdatePokemon($pokemon, $id);
+
+                        if ($id_pokemon_updated !== -1) {
+                            $result = ["status_code" => 200, "message" => "Pokemon updated."];
+                        } else {
+                            $result = ["status_code" => 500, "message" => "Pokemon has not been updated."];
+                        }
+                    } else {
+                        //Update the pokemon data.
+                        $id_pokemon_updated = $database->UpdatePokemon($pokemon, $id);
+
+                        if ($id_pokemon_updated !== -1) {
+                            //Delete previous image if exists.
+                            if (!file_exists($img_path_relative_previous) || unlink($img_path_relative_previous)) {
+                                //Move the image path from temporal path to /users/img/.
+                                if (!move_uploaded_file($img_path_tmp, $img_path_relative)) {
+                                    $result = ["status_code" => 400, "message" => "Error to upload the file."];
+                                } else {
+                                    $result = ["status_code" => 200, "message" => "Pokemon updated."];
+                                }
+                            }
+                        } else {
+                            $result = ["status_code" => 500, "message" => "Pokemon has not been updated."];
+                        }
                     }
+                } else {
+                    $result = ["status_code" => 404, "message" => "Pokemon not found."];
                 }
-            } else {
-                $result = ["status_code" => 400, "message" => "Error to delete previous image."];
+            } catch (PDOException $e) {
+                $result = ["status_code" => 500, "message" => getErrorMessage($e)];
             }
         } else {
             $result = ["status_code" => 400, "message" => "The number of pokemon is not valid."];
@@ -217,67 +205,59 @@ function update()
         $result = ["status_code" => 400, "message" => "All fields is required."];
     }
 
-    //Add pokedex to session with new values.
-    $_SESSION["pokedex"] = $pokedex;
-
     //Add message to session.
     $_SESSION["response"] = $result;
 
-    if ($result["status_code"] === 200) {
+    //If the pokemon is updated without any errors.
+    if (isset($id_pokemon_updated) && $id_pokemon_updated !== -1) {
         //Redirect to pokemon_list.php
         header("Location: ../php_views/pokemon_list.php");
     } else {
-        //Add pokemon data to session.
-        $_SESSION["pokemon"] = $pokemon;
-
         //Redirect to pokemon_edit.php        
-        header("Location: ../php_views/pokemon_edit.php");
+        header("Location: " . $_SERVER['HTTP_REFERER']);
     }
 }
 
 function delete()
 {
-    $pokedex = [];
     $result = [];
 
-    //Check if we have pokedex.
-    if (isset($_SESSION["pokedex"])) {
-        $pokedex = $_SESSION["pokedex"];
-    }
-
     //Get all values from POST, if is not set, get empty value.
-    $number = isset($_POST["number"]) ? $_POST["number"] : "";
+    $id = isset($_POST["id"]) ? $_POST["id"] : "";
 
-    if (!empty($number)) {
-        $index = findPokemonByNum($pokedex, $number);
+    if (!empty($id)) {
+        $database = new Database();
+        $pokemons = $database->SelectPokemons($id);
 
-        if ($index !== -1) {
-            $pokemon = $pokedex[$index];
+        if (count($pokemons) > 0) {
+            $pokemon = $pokemons[0];
 
-            $extension = pathinfo($pokemon["image_url"], PATHINFO_EXTENSION);
-            $img_path_relative = "../media/img/" . $pokemon["number"] . "." . $extension;
+            $extension = pathinfo($pokemon["imagen"], PATHINFO_EXTENSION);
+            $img_path_relative = "../users/img/" . $pokemon["numero"] . "." . $extension;
 
             //Delete pokemon.
-            $result = deletePokemon($pokedex, $number);
+            $id_pokemon_deleted = $database->DeletePokemon($id);
 
-            if ($result["status_code"] === 200) {
+            if ($id_pokemon_deleted !== -1) {
                 //Delete the image of pokemon if exists.
                 if (file_exists($img_path_relative) && !unlink($img_path_relative)) {
                     $result = ["status_code" => 400, "message" => "Error to delete the file."];
+                } else {
+                    $result = ["status_code" => 200, "message" => "Pokemon deleted."];
                 }
+            } else {
+                $result = ["status_code" => 500, "message" => "Pokemon has not been deleted."];
             }
         } else {
-            $result = ["status_code" => 400, "message" => "This pokemon is not exists."];
+            $result = ["status_code" => 400, "message" => "Pokemon not found."];
         }
     } else {
-        $result = ["status_code" => 400, "message" => "The number of pokemon is missing."];
+        $result = ["status_code" => 400, "message" => "The id of pokemon is missing."];
     }
 
-    //Add pokedex to session with new values.
-    $_SESSION["pokedex"] = $pokedex;
-
-    //Add message to session.
+    //Add response message to session.
     $_SESSION["response"] = $result;
 
+    //Redirect to pokemon_list.php
     header("Location: ../php_views/pokemon_list.php");
 }

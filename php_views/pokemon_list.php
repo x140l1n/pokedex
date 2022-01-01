@@ -8,11 +8,16 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+if (isset($_SESSION["pokemon"])) {
+    unset($_SESSION["pokemon"]);
+}
+
 $pokedex = [];
 
 $database = new Database();
 
 $pokedex = $database->SelectPokemons();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -50,7 +55,7 @@ $pokedex = $database->SelectPokemons();
                 }
 
                 echo '<div class="col d-flex align-items-stretch">
-                            <div class="card border border-secondary">
+                            <div class="card border border-secondary w-100">
                                 <img src="' . $pokemon["imagen"] . '" class="card-img-top" alt="' . $pokemon["nombre"] . '">
                                 <div class="card-body">
                                     <h5 class="card-title">' . $pokemon["numero"] . ' - ' . $pokemon["nombre"] . '</h5>
@@ -63,10 +68,13 @@ $pokedex = $database->SelectPokemons();
                                         <button class="btn btn-outline-danger" type="submit" title="Delete pokemon" name="method" value="delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                        <button class="btn btn-outline-primary" type="submit" title="Edit pokemon" name="method" value="redirect_update_page">
+                                        <input type="hidden" name="id" value="' . $pokemon["id"] . '"/>
+                                    </form>
+                                    <form action="/pokedex/php_views/pokemon_edit.php" method="GET">
+                                        <button class="btn btn-outline-primary" type="submit" title="Edit pokemon">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <input type="hidden" name="number" value="' . $pokemon["numero"] . '"/>
+                                        <input type="hidden" name="id" value="' . $pokemon["id"] . '"/>
                                     </form>
                                 </div>
                             </div>

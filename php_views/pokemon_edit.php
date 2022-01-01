@@ -1,15 +1,32 @@
 <?php
+
+//Import all libraries.
+require_once("../php_librarys/database.php");
+
 //If there is not session, start session.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-//unset($_SESSION["pokedex"]);
+$database = new Database();
 
-//Check if we have pokemon data.
-if (isset($_SESSION["pokemon"])) {
-    $pokemon = $_SESSION["pokemon"];
+if (isset($_GET["id"])) {
+    $pokemons = $database->SelectPokemons($_GET["id"]);
+
+    if (count($pokemons) > 0) {
+        $pokemon = $pokemons[0];
+    }
+} 
+
+if (!isset($pokemon)) {
+    $_SESSION["response"] = ["status_code" => 404, "message" => "Pokemon not found."];
+
+    header("Location: pokemon_list.php");
 }
+
+//Get all regions and types.
+$regions = $database->SelectRegions();
+$types = $database->SelectTypes();
 
 ?>
 <!DOCTYPE html>
@@ -33,93 +50,65 @@ if (isset($_SESSION["pokemon"])) {
                         " . $_SESSION["response"]["message"] . "
                     </div>";
             }
-
-            unset($_SESSION["response"]);
         }
         ?>
         <div class="row justify-content-center">
             <div class="col-md-12 col-lg-5">
                 <div class="card">
                     <div class="card-header bg-secondary d-flex align-items-center">
-                        <img src="/pokedex/media/img/pokeball.png" width="50" height="50" />
+                        <img src="/pokedex/webApp/pokeball.png" width="50" height="50" />
                         <span class="fs-5 text-light ms-2">Pokemon</span>
                     </div>
-                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data" name="form-update">
+                    <form action="/pokedex/php_controllers/pokemon_controller.php" method="POST" enctype="multipart/form-data">
                         <div class="card-body">
                             <div class="row mb-3">
                                 <label for="input-number" class="col-sm-3 col-form-label">Number * </label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="number" id="input-number" maxlength="3" placeholder="000" value="<?php echo (isset($pokemon) ? $pokemon["number"] : "") ?>" required readonly>
+                                    <input type="text" class="form-control" name="number" id="input-number" maxlength="3" placeholder="000" value="<?php echo (isset($pokemon) ? $pokemon["numero"] : "") ?>" required>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label for="input-name" class="col-sm-3 col-form-label">Name * </label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="name" id="input-name" value="<?php echo (isset($pokemon) ? $pokemon["name"] : "") ?>" required>
+                                    <input type="text" class="form-control" name="name" id="input-name" value="<?php echo (isset($pokemon) ? $pokemon["nombre"] : "") ?>" required>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label for="select-region" class="col-sm-3 col-form-label">Region * </label>
                                 <div class="col-sm-9">
                                     <select class="form-select" name="region" id="select-region" required>
-                                        <option value="kanto" <?php echo (isset($pokemon) ? ($pokemon["region"] === "kanto" ? "selected" : "") : "") ?>>Kanto</option>
-                                        <option value="jotho" <?php echo (isset($pokemon) ? ($pokemon["region"] === "jotho" ? "selected" : "") : "") ?>>Jotho</option>
-                                        <option value="hoenn" <?php echo (isset($pokemon) ? ($pokemon["region"] === "hoenn" ? "selected" : "") : "") ?>>Hoenn</option>
-                                        <option value="sinnoh" <?php echo (isset($pokemon) ? ($pokemon["region"] === "sinnoh" ? "selected" : "") : "") ?>>Sinnoh</option>
-                                        <option value="teselia" <?php echo (isset($pokemon) ? ($pokemon["region"] === "teselia" ? "selected" : "") : "") ?>>Teselia</option>
+                                        <?php
+                                        foreach ($regions as $region) {
+                                            echo "<option value='" . $region["id"] . "' " . (isset($pokemon["regiones_id"]) ? ($pokemon["regiones_id"] === $region["id"] ? "selected" : "") : "") . ">" . $region["nombre"] . "</option>";
+                                        }
+                                        ?>
                                     </select>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label class="col-sm-3 col-form-label">Type * </label>
                                 <div class="col-sm-9">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-plant" value="plant" <?php echo (isset($pokemon) ? (in_array("plant", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-plant">Plant</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-poison" value="poison" <?php echo (isset($pokemon) ? (in_array("poison", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-poison">Poison</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-fire" value="fire" <?php echo (isset($pokemon) ? (in_array("fire", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-fire">Fire</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-fly" value="fly" <?php echo (isset($pokemon) ? (in_array("fly", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-fly">Fly</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-water" value="water" <?php echo (isset($pokemon) ? (in_array("water", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-water">Water</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-electric" value="electric" <?php echo (isset($pokemon) ? (in_array("electric", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-electric">Electric</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-fairy" value="fairy" <?php echo (isset($pokemon) ? (in_array("fairy", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-fairy">Fairy</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-bug" value="bug" <?php echo (isset($pokemon) ? (in_array("bug", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-bug">Bug</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-fight" value="fight" <?php echo (isset($pokemon) ? (in_array("fight", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-fight">Fight</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="type[]" id="check-psychic" value="psychic" <?php echo (isset($pokemon) ? (in_array("psychic", $pokemon["type"]) ? "checked" : "") : "") ?>>
-                                        <label class="form-check-label" for="check-psychic">Psychic</label>
-                                    </div>
+                                    <?php
+                                    $ids_types_pokemon = [];
+                                    
+                                    if (isset($pokemon["tipos"])) {
+                                        $ids_types_pokemon = array_column($pokemon["tipos"], "id");
+                                    }
+
+                                    foreach ($types as $type) {
+                                        echo    "<div class='form-check form-check-inline'>
+                                                        <input class='form-check-input' type='checkbox' name='type[]' id='type-" . $type["id"] . "' value='" . $type["id"] . "' " . (in_array($type["id"], $ids_types_pokemon) ? "checked" : "") . ">
+                                                        <label class='form-check-label' for='type-" . $type["id"] . "'>" . $type["nombre"] . "</label>
+                                                    </div>";
+                                    }
+                                    ?>
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <label for="input-name" class="col-sm-3 col-form-label">Height * </label>
                                 <div class="col-sm-9">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control" min="1" name="height" id="input-height" placeholder="0" value="<?php echo (isset($pokemon) ? $pokemon["height"] : "") ?>" required>
+                                        <input type="number" class="form-control" min="1" name="height" id="input-height" placeholder="0" value="<?php echo (isset($pokemon) ? $pokemon["altura"] : "") ?>" required>
                                         <span class="input-group-text">cm</span>
                                     </div>
                                 </div>
@@ -128,7 +117,7 @@ if (isset($_SESSION["pokemon"])) {
                                 <label for="input-name" class="col-sm-3 col-form-label">Weight * </label>
                                 <div class="col-sm-9">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control" min="0" step="0.01" name="weight" id="input-weight" placeholder="0,0" value="<?php echo (isset($pokemon) ? $pokemon["weight"] : "") ?>" required>
+                                        <input type="number" class="form-control" min="0" step="0.01" name="weight" id="input-weight" placeholder="0,0" value="<?php echo (isset($pokemon) ? $pokemon["peso"] : "") ?>" required>
                                         <span class="input-group-text">kg</span>
                                     </div>
                                 </div>
@@ -137,28 +126,29 @@ if (isset($_SESSION["pokemon"])) {
                                 <label for="input-name" class="col-sm-3 col-form-label">Evolution * </label>
                                 <div class="col-sm-9">
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="evolution" id="radio-none-evolution" value="none-evolution" <?php echo (isset($pokemon) ? ($pokemon["evolution"] === "none-evolution" ? "checked" : "") : "checked") ?>>
+                                        <input class="form-check-input" type="radio" name="evolution" id="radio-none-evolution" value="Sin evolucionar" <?php echo (isset($pokemon) ? ($pokemon["evolucion"] === "Sin evolucionar" ? "checked" : "") : "checked") ?>>
                                         <label class="form-check-label" for="radio-none-evolution">None evolution</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="evolution" id="radio-first-evolution" value="first-evolution" <?php echo (isset($pokemon) ? ($pokemon["evolution"] === "first-evolution" ? "checked" : "") : "") ?>>
+                                        <input class="form-check-input" type="radio" name="evolution" id="radio-first-evolution" value="Primera evolución" <?php echo (isset($pokemon) ? ($pokemon["evolucion"] === "Primera evolución" ? "checked" : "") : "") ?>>
                                         <label class="form-check-label" for="radio-first-evolution">First evolution</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="evolution" id="radio-second-evolution" value="second-evolution" <?php echo (isset($pokemon) ? ($pokemon["evolution"] === "second-evolution" ? "checked" : "") : "") ?>>
+                                        <input class="form-check-input" type="radio" name="evolution" id="radio-second-evolution" value="Segunda evolución" <?php echo (isset($pokemon) ? ($pokemon["evolucion"] === "Segunda evolución" ? "checked" : "") : "") ?>>
                                         <label class="form-check-label" for="radio-second-evolution">Second evolution</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="row mb-3">
-                                <label for="input-name" class="col-sm-3 col-form-label">Image * </label>
+                                <label for="input-name" class="col-sm-3 col-form-label">Image</label>
                                 <div class="col-sm-9">
-                                    <input type="file" class="form-control" name="image" id="input-image" required>
+                                    <input type="file" class="form-control" name="image" id="input-image">
                                 </div>
                             </div>
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-2">
                                 <a href="pokemon_list.php" class="btn btn-secondary float-end">Cancel</a>
                                 <button type="submit" class="btn btn-primary float-end" name="method" value="update">Submit</button>
+                                <input type="hidden" name="id" value="<?php echo $pokemon["id"]; ?>"/>
                             </div>
                         </div>
                     </form>

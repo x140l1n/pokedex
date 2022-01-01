@@ -1,11 +1,11 @@
 //Toggle display alert.
-let alert = document.querySelector("div[role='alert']");
+let _alert = document.querySelector("div[role='alert']");
 
 //If exists alert.
-if (alert) {
-  alert.classList.add("in");
+if (_alert) {
+  _alert.classList.add("in");
 
-  setTimeout(function () {
-    alert.classList.remove("in");
-  }, 3000);
+  setTimeout(() => {
+    _alert.classList.remove("in");
+  }, 5000);
 }
