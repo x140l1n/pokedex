@@ -69,7 +69,7 @@ function add()
         empty($evolution) ||
         empty($image))) {
         //Check if the number of length is 3 and only digits.
-        if (strlen($number) === 3 && numbers_only($number)) {
+        if (strlen($number) === 3 && checkNumbersOnly($number)) {
             try {
                 //Add pokemon to database.
                 $database = new Database();
@@ -191,7 +191,7 @@ function update()
         empty($evolution) ||
         empty($image))) {
         //Check if the number of length is 3 and only digits.
-        if (strlen($number) === 3 && numbers_only($number)) {
+        if (strlen($number) === 3 && checkNumbersOnly($number)) {
             //Get previous image path.
             $img_path_relative_previous = $pokemon["image_url"];
 

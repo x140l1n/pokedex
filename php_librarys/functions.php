@@ -6,11 +6,10 @@
  * @param  string $value The value to
  * @return int|false Returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred.
  */
-function numbers_only($value)
+function checkNumbersOnly($value)
 {
     return preg_match('/^([0-9]*)$/', $value);
 }
-
 
 /**
  * Get the error message from PDOException depending of error code.
@@ -21,6 +20,7 @@ function numbers_only($value)
 function getErrorMessage($e)
 {
     $message = "";
+
     /*
         0	SQLSTATE error code (a five characters alphanumeric identifier defined in the ANSI SQL standard).
         1	Driver-specific error code.
@@ -39,7 +39,8 @@ function getErrorMessage($e)
             case 1049: $message = "Database error: Unknown database."; break;
             case 2002: $message = "Database error: Server not found."; break;
             default: $message = $e->getCode() . ": " . $e->getMessage();
-
         }
     }
+
+    return $message;
 }

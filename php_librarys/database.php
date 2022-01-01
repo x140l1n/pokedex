@@ -9,6 +9,12 @@ class Database
 {
     private $conn = null;
 
+    /**
+     * Create the database connection.
+     * 
+     * @throws PDOException Throws exception when error ocurred with database.
+     * @return void
+     */
     public function __construct()
     {
         //If the variable conn is null then create connection.
@@ -26,6 +32,7 @@ class Database
 
     /**
      * Get all pokemons or one pokemon from database ordered by number of pokemon.
+     * 
      * @param  int $id (optional) The id of pokemon.
      * @throws PDOException Throws exception when error ocurred with database.
      * @return array Return array associative of all pokemons or one pokemon.
@@ -67,6 +74,7 @@ class Database
 
     /**
      * Get all types of one pokemon from database.
+     * 
      * @param  int $id The id of pokemon.
      * @throws PDOException Throws exception when error ocurred with database.
      * @return array Return array associative of types.
@@ -96,6 +104,7 @@ class Database
 
     /**
      * Get all types or one type from database ordered by name of type.
+     * 
      * @param  int $id (optional) The id of type.
      * @throws PDOException Throws exception when error ocurred with database.
      * @return array Return array associative of all types or one type.
@@ -131,6 +140,7 @@ class Database
 
     /**
      * Get all regions or one region from database ordered by name of region.
+     * 
      * @param  int $id (optional) The id of region.
      * @throws PDOException Throws exception when error ocurred with database.
      * @return array Return array associative of all regions or one region.
@@ -166,6 +176,7 @@ class Database
 
     /**
      * Insert new pokemon with types to database. If an error ocurred, rollback all changes.
+     * 
      * @param  array $pokemon The pokemon data.
      * @throws PDOException Throws exception when error ocurred with database.
      * @return int Return the id of new pokemon inserted.
@@ -218,6 +229,12 @@ class Database
         return $last_id;
     }
 
+        
+    /**
+     * Close the connection if is different than null.
+     *
+     * @return void
+     */
     public function __destruct()
     {
         if ($this->conn) $this->conn = null;

@@ -77,10 +77,10 @@ $types = $database->SelectTypes();
                                 <label class="col-sm-3 col-form-label">Type * </label>
                                 <div class="col-sm-9">
                                     <?php 
-                                        foreach($regions as $region) {
+                                        foreach($types as $type) {
                                             echo    "<div class='form-check form-check-inline'>
-                                                        <input class='form-check-input' type='checkbox' name='type[]' id='type-" . $region["id"] . "' value='" . $region["id"] . "' >
-                                                        <label class='form-check-label' for='type-" . $region["id"] . "'>" . $region["nombre"] . "</label>
+                                                        <input class='form-check-input' type='checkbox' name='type[]' id='type-" . $type["id"] . "' value='" . $type["id"] . "' >
+                                                        <label class='form-check-label' for='type-" . $type["id"] . "'>" . $type["nombre"] . "</label>
                                                     </div>";
                                         }
                                     ?>
